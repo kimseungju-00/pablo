@@ -271,11 +271,11 @@ def morphological_operations(mask):
     eroded_mask = cv2.erode(mask, kernel_erosion, iterations=1)
 
     # 팽창 연산을 통해 객체 크기 확장
-    kernel_dilation = np.ones((5, 5), np.uint8)
+    kernel_dilation = np.ones((3, 3), np.uint8)
     dilated_mask = cv2.dilate(eroded_mask, kernel_dilation, iterations=1)
     
-    ## 침식 연산을 통해 객체 크기 축소
-    #kernel_erosion2 = np.ones((3, 3), np.uint8)
+    # 침식 연산을 통해 객체 크기 축소
+    #kernel_erosion2 = np.ones((2, 2), np.uint8)
     #eroded_mask2 = cv2.erode(dilated_mask, kernel_erosion2, iterations=1)
 #
     ## 팽창 연산을 통해 객체 크기 확장
@@ -314,23 +314,25 @@ def main():
             outputs = model(images)
             masks = torch.sigmoid(outputs).cpu().numpy()
             masks = np.squeeze(masks, axis=1)
-            masks = (masks > 0.3).astype(np.uint8)  # Threshold = 0.3
+            masks = (masks > 0.35).astype(np.uint8)  # Threshold = 0.2745
 
             for i in range(len(images)):
                 mask_rle = rle_encode(masks[i])
                 if mask_rle == '':
                     result.append(-1)
                 else:
-                    mask_binary = (masks[i] > 0.3).astype(np.uint8)
+                    mask_binary = (masks[i] > 0.35).astype(np.uint8)
                     mask_morph = morphological_operations(mask_binary)
                     mask_rle = rle_encode(mask_morph)
-
-                    result.append(mask_rle)
+                    if mask_rle == '':
+                        result.append(-1)
+                    else:
+                        result.append(mask_rle)
 
     submit = pd.read_csv('./sample_submission.csv')
     submit['mask_rle'] = result
 
-    submit.to_csv('./submit.csv', index=False)
+    submit.to_csv('./submit4.csv', index=False)
 
 if __name__ == "__main__":
     main()
